@@ -1,31 +1,27 @@
+from dataclasses import dataclass, field, asdict
 from datetime import datetime
+from typing import Optional
 
+@dataclass
 class Usuario:
-    def __init__(self, nome: str, email: str, dt_nascimento: datetime, cpf: str, telefone: str, id: int = None):
-        self.id = id
-        self.nome = nome
-        self.email = email
-        self.dt_nascimento = dt_nascimento
-        self.cpf = cpf
-        self.telefone = telefone
+    nome: str
+    email: str
+    dtNascimento: datetime
+    CPF: str
+    Telefone: str
+    id: Optional[int] = field(default=None)
 
     def to_dict(self):
-        return {
-            'id': self.id,
-            'nome': self.nome,
-            'email': self.email,
-            'dt_nascimento': self.dt_nascimento.isoformat() if self.dt_nascimento else None,
-            'cpf': self.cpf,
-            'telefone': self.telefone
-        }
+        data = asdict(self)
+        # Converte o datetime para string no formato ISO se existir
+        data['dtNascimento'] = self.dtNascimento.isoformat() if self.dtNascimento else None
+        return data
 
-    @staticmethod
-    def from_dict(data: dict):
-        return Usuario(
-        id=data.get('id'),
-        nome=data.get('nome'),
-        email=data.get('email'),
-        dt_nascimento=datetime.fromisoformat(data.get('dt_nascimento')) if data.get('dt_nascimento') else None,
-        cpf=data.get('cpf'),
-        telefone=data.get('telefone')
-    )
+    @classmethod
+    def from_dict(cls, data: dict):
+        # Se o valor de dtNascimento for uma string, converte para datetime
+        dt = data.get('dtNascimento')
+        if dt and isinstance(dt, str):
+            data['dtNascimento'] = datetime.fromisoformat(dt)
+        return cls(**data)
+

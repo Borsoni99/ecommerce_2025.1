@@ -1,30 +1,31 @@
+from dataclasses import dataclass, asdict
 from datetime import datetime
+from typing import Optional
 
+@dataclass
 class CartaoCredito:
-    def __init__(self, numero: str, dt_expiracao: datetime, cvv: str, saldo: float, id_usuario_cartao: int, id: int = None):
-        self.id = id
-        self.numero = numero
-        self.dt_expiracao = dt_expiracao
-        self.cvv = cvv
-        self.saldo = saldo
-        self.id_usuario_cartao = id_usuario_cartao
+    numero: str
+    dt_expiracao: datetime
+    cvv: str
+    saldo: float
+    id_usuario_cartao: int
+    id: Optional[int] = None
 
     def to_dict(self):
-        return {
-            'id': self.id,
-            'numero': self.numero,
-            'dt_expiracao': self.dt_expiracao.isoformat() if self.dt_expiracao else None,
-            'cvv': self.cvv,
-            'saldo': float(self.saldo),
-            'id_usuario_cartao': self.id_usuario_cartao
-        }
+        data = asdict(self)
+        # Converte o datetime para string ISO, se existir
+        data['dt_expiracao'] = self.dt_expiracao.isoformat() if self.dt_expiracao else None
+        return data
 
-    @staticmethod
-    def from_dict(data: dict):
-        return CartaoCredito(
+    @classmethod
+    def from_dict(cls, data: dict):
+        dt = data.get('dt_expiracao')
+        if dt and isinstance(dt, str):
+            dt = datetime.fromisoformat(dt)
+        return cls(
             id=data.get('id'),
             numero=data.get('numero'),
-            dt_expiracao=datetime.fromisoformat(data['dt_expiracao']) if data.get('dt_expiracao') else None,
+            dt_expiracao=dt,
             cvv=data.get('cvv'),
             saldo=float(data.get('saldo', 0)),
             id_usuario_cartao=data.get('id_usuario_cartao')

@@ -1,17 +1,17 @@
+from dataclasses import dataclass, asdict
+from typing import Optional
+
+@dataclass
 class TipoEndereco:
-    def __init__(self, tipo: str, id: int = None):
-        self.id = id
-        self.tipo = tipo
+    tipo: str
+    id: Optional[int] = None
 
     def to_dict(self):
-        return {
-            'id': self.id,
-            'tipo': self.tipo
-        }
+        return asdict(self)
 
-    @staticmethod
-    def from_dict(data: dict):
-        return TipoEndereco(
+    @classmethod
+    def from_dict(cls, data: dict):
+        return cls(
             id=data.get('id'),
             tipo=data.get('tipo')
         )

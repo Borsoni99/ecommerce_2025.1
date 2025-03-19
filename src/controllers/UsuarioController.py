@@ -14,8 +14,8 @@ class UsuarioController:
             cursor = self.db.connection.cursor()
             sql = """INSERT INTO usuario (nome, email, dtNascimento, CPF, Telefone)
                      VALUES (%s, %s, %s, %s, %s)"""
-            values = (usuario.nome, usuario.email, usuario.dt_nascimento,
-                     usuario.cpf, usuario.telefone)
+            values = (usuario.nome, usuario.email, usuario.dtNascimento,
+                     usuario.cpf, usuario.Telefone)
 
             cursor.execute(sql, values)
             self.db.connection.commit()
@@ -54,8 +54,8 @@ class UsuarioController:
             cursor = self.db.connection.cursor()
             sql = """UPDATE usuario SET nome = %s, email = %s, dtNascimento = %s,
                      CPF = %s, Telefone = %s WHERE id = %s"""
-            values = (usuario.nome, usuario.email, usuario.dt_nascimento,
-                     usuario.cpf, usuario.telefone, id)
+            values = (usuario.nome, usuario.email, usuario.dtNascimento,
+                     usuario.CPF, usuario.Telefone, id)
 
             cursor.execute(sql, values)
             self.db.connection.commit()
