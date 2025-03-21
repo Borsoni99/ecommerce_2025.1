@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import Optional
 
@@ -9,20 +9,22 @@ class Usuario:
     dtNascimento: datetime
     CPF: str
     Telefone: str
-    id: Optional[int] = field(default=None)
+    id: Optional[str] = None
 
     def to_dict(self):
         data = asdict(self)
-        # Converte o datetime para string no formato ISO se existir
-        data['dtNascimento'] = self.dtNascimento.isoformat() if self.dtNascimento else None
-        return data
+        # Convert datetime to ISO format and remove None values
+        if self.dtNascimento:
+            data['dtNascimento'] = self.dtNascimento.isoformat()
+        return {k: v for k, v in data.items() if v is not None}
 
     @classmethod
     def from_dict(cls, data: dict):
-        # Se o valor de dtNascimento for uma string, converte para datetime
+        # Handle datetime conversion
         dt = data.get('dtNascimento')
         if dt and isinstance(dt, str):
             data['dtNascimento'] = datetime.fromisoformat(dt)
+        
         return cls(
             id=data.get('id'),
             nome=data.get('nome'),

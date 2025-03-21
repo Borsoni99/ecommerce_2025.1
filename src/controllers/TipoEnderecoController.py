@@ -1,75 +1,74 @@
 from flask import jsonify, request
 from models.TipoEndereco import TipoEndereco
-from database.mysql_connection import MySQLConnection
+from database.cosmos_connection import CosmosConnection
+import uuid
 
 class TipoEnderecoController:
     def __init__(self):
-        self.db = MySQLConnection()
+        self.db = CosmosConnection()
+        self.container = self.db.get_container('tipos_endereco')
 
     def create(self):
         try:
             data = request.json
             tipo_endereco = TipoEndereco.from_dict(data)
-
-            cursor = self.db.connection.cursor()
-            sql = "INSERT INTO tipo_endereco (tipo) VALUES (%s)"
-            values = (tipo_endereco.tipo,)
-
-            cursor.execute(sql, values)
-            self.db.connection.commit()
-            tipo_endereco.id = cursor.lastrowid
-
-            return jsonify(tipo_endereco.to_dict()), 201
+            
+            # Generate a unique ID for the document
+            document = tipo_endereco.to_dict()
+            document['id'] = str(uuid.uuid4())
+            
+            # Create the document in Cosmos DB
+            created_item = self.container.create_item(body=document)
+            
+            return jsonify(created_item), 201
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
     def get_all(self):
         try:
-            cursor = self.db.connection.cursor(dictionary=True)
-            cursor.execute("SELECT * FROM tipo_endereco")
-            tipos = cursor.fetchall()
-            return jsonify([TipoEndereco.from_dict(t).to_dict() for t in tipos]), 200
+            # Query all items
+            query = "SELECT * FROM c"
+            items = list(self.container.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
+            return jsonify(items), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
     def get_by_id(self, id):
         try:
-            cursor = self.db.connection.cursor(dictionary=True)
-            cursor.execute("SELECT * FROM tipo_endereco WHERE id = %s", (id,))
-            tipo = cursor.fetchone()
-
-            if tipo:
-                return jsonify(TipoEndereco.from_dict(tipo).to_dict()), 200
-            return jsonify({'message': 'Tipo de endereço não encontrado'}), 404
+            # Get item by id
+            item = self.container.read_item(item=str(id), partition_key=str(id))
+            return jsonify(item), 200
         except Exception as e:
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'message': 'Tipo de endereço não encontrado'}), 404
 
     def update(self, id):
         try:
             data = request.json
             tipo_endereco = TipoEndereco.from_dict(data)
-
-            cursor = self.db.connection.cursor()
-            sql = "UPDATE tipo_endereco SET tipo = %s WHERE id = %s"
-            values = (tipo_endereco.tipo, id)
-
-            cursor.execute(sql, values)
-            self.db.connection.commit()
-
-            if cursor.rowcount > 0:
-                return jsonify({'message': 'Tipo de endereço atualizado com sucesso'}), 200
-            return jsonify({'message': 'Tipo de endereço não encontrado'}), 404
+            
+            # First, get the existing item
+            try:
+                existing_item = self.container.read_item(item=str(id), partition_key=str(id))
+            except:
+                return jsonify({'message': 'Tipo de endereço não encontrado'}), 404
+            
+            # Update the item
+            existing_item['tipo'] = tipo_endereco.tipo
+            
+            # Replace the item in Cosmos DB
+            updated_item = self.container.replace_item(item=str(id), body=existing_item)
+            
+            return jsonify({'message': 'Tipo de endereço atualizado com sucesso'}), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
     def delete(self, id):
         try:
-            cursor = self.db.connection.cursor()
-            cursor.execute("DELETE FROM tipo_endereco WHERE id = %s", (id,))
-            self.db.connection.commit()
-
-            if cursor.rowcount > 0:
-                return jsonify({'message': 'Tipo de endereço deletado com sucesso'}), 200
-            return jsonify({'message': 'Tipo de endereço não encontrado'}), 404
+            # Delete the item
+            self.container.delete_item(item=str(id), partition_key=str(id))
+            return jsonify({'message': 'Tipo de endereço deletado com sucesso'}), 200
         except Exception as e:
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'message': 'Tipo de endereço não encontrado'}), 404

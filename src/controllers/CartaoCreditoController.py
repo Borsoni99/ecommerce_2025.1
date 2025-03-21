@@ -1,79 +1,77 @@
 from flask import jsonify, request
 from models.CartaoCredito import CartaoCredito
-from database.mysql_connection import MySQLConnection
+from database.cosmos_connection import CosmosConnection
+import uuid
 
 class CartaoCreditoController:
     def __init__(self):
-        self.db = MySQLConnection()
+        self.db = CosmosConnection()
+        self.container = self.db.get_container('cartoes_credito')
 
     def create(self):
         try:
             data = request.json
             cartao = CartaoCredito.from_dict(data)
-
-            cursor = self.db.connection.cursor()
-            sql = """INSERT INTO cartao_credito (numero, dtExpiracao, cvv, saldo, id_usuario_cartao)
-                     VALUES (%s, %s, %s, %s, %s)"""
-            values = (cartao.numero, cartao.dt_expiracao, cartao.cvv,
-                     cartao.saldo, cartao.id_usuario_cartao)
-
-            cursor.execute(sql, values)
-            self.db.connection.commit()
-            cartao.id = cursor.lastrowid
-
-            return jsonify(cartao.to_dict()), 201
+            
+            # Generate a unique ID for the document
+            document = cartao.to_dict()
+            document['id'] = str(uuid.uuid4())
+            
+            # Create the document in Cosmos DB
+            created_item = self.container.create_item(body=document)
+            
+            return jsonify(created_item), 201
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
     def get_all(self):
         try:
-            cursor = self.db.connection.cursor(dictionary=True)
-            cursor.execute("SELECT * FROM cartao_credito")
-            cartoes = cursor.fetchall()
-            return jsonify([CartaoCredito.from_dict(c).to_dict() for c in cartoes]), 200
+            # Query all items
+            query = "SELECT * FROM c"
+            items = list(self.container.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
+            return jsonify(items), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
     def get_by_id(self, id):
         try:
-            cursor = self.db.connection.cursor(dictionary=True)
-            cursor.execute("SELECT * FROM cartao_credito WHERE id = %s", (id,))
-            cartao = cursor.fetchone()
-
-            if cartao:
-                return jsonify(CartaoCredito.from_dict(cartao).to_dict()), 200
-            return jsonify({'message': 'Cartão não encontrado'}), 404
+            # Get item by id
+            item = self.container.read_item(item=str(id), partition_key=str(id))
+            return jsonify(item), 200
         except Exception as e:
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'message': 'Cartão não encontrado'}), 404
 
     def update(self, id):
         try:
             data = request.json
             cartao = CartaoCredito.from_dict(data)
-
-            cursor = self.db.connection.cursor()
-            sql = """UPDATE cartao_credito SET numero = %s, dtExpiracao = %s, cvv = %s,
-                     saldo = %s, id_usuario_cartao = %s WHERE id = %s"""
-            values = (cartao.numero, cartao.dt_expiracao, cartao.cvv,
-                     cartao.saldo, cartao.id_usuario_cartao, id)
-
-            cursor.execute(sql, values)
-            self.db.connection.commit()
-
-            if cursor.rowcount > 0:
-                return jsonify({'message': 'Cartão atualizado com sucesso'}), 200
-            return jsonify({'message': 'Cartão não encontrado'}), 404
+            
+            # First, get the existing item
+            try:
+                existing_item = self.container.read_item(item=str(id), partition_key=str(id))
+            except:
+                return jsonify({'message': 'Cartão não encontrado'}), 404
+            
+            # Update the item with new values
+            update_data = cartao.to_dict()
+            for key, value in update_data.items():
+                if key != 'id':  # Don't update the id
+                    existing_item[key] = value
+            
+            # Replace the item in Cosmos DB
+            updated_item = self.container.replace_item(item=str(id), body=existing_item)
+            
+            return jsonify({'message': 'Cartão atualizado com sucesso'}), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
 
     def delete(self, id):
         try:
-            cursor = self.db.connection.cursor()
-            cursor.execute("DELETE FROM cartao_credito WHERE id = %s", (id,))
-            self.db.connection.commit()
-
-            if cursor.rowcount > 0:
-                return jsonify({'message': 'Cartão deletado com sucesso'}), 200
-            return jsonify({'message': 'Cartão não encontrado'}), 404
+            # Delete the item
+            self.container.delete_item(item=str(id), partition_key=str(id))
+            return jsonify({'message': 'Cartão deletado com sucesso'}), 200
         except Exception as e:
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'message': 'Cartão não encontrado'}), 404
