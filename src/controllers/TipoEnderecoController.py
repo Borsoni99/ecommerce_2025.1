@@ -12,11 +12,12 @@ class TipoEnderecoController:
             tipo_endereco = TipoEndereco.from_dict(data)
 
             cursor = self.db.connection.cursor()
-            sql = "INSERT INTO tipo_endereco (id, tipo) VALUES (%s, %s)"
-            values = (tipo_endereco.id, tipo_endereco.tipo)
+            sql = "INSERT INTO tipo_endereco (tipo) VALUES (%s)"
+            values = (tipo_endereco.tipo,)
 
             cursor.execute(sql, values)
             self.db.connection.commit()
+            tipo_endereco.id = cursor.lastrowid
 
             return jsonify(tipo_endereco.to_dict()), 201
         except Exception as e:

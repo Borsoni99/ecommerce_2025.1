@@ -23,5 +23,12 @@ class Usuario:
         dt = data.get('dtNascimento')
         if dt and isinstance(dt, str):
             data['dtNascimento'] = datetime.fromisoformat(dt)
-        return cls(**data)
+        return cls(
+            id=data.get('id'),
+            nome=data.get('nome'),
+            email=data.get('email'),
+            dtNascimento=data.get('dtNascimento'),
+            CPF=data.get('CPF'),
+            Telefone=data.get('Telefone')
+        )
 

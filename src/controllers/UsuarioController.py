@@ -15,7 +15,7 @@ class UsuarioController:
             sql = """INSERT INTO usuario (nome, email, dtNascimento, CPF, Telefone)
                      VALUES (%s, %s, %s, %s, %s)"""
             values = (usuario.nome, usuario.email, usuario.dtNascimento,
-                     usuario.cpf, usuario.Telefone)
+                     usuario.CPF, usuario.Telefone)
 
             cursor.execute(sql, values)
             self.db.connection.commit()
