@@ -89,33 +89,92 @@ def delete_usuario(id):
     return usuario_controller.delete(id)
 
 # Rotas para Cartão de Crédito
-app.route('/cartoes', methods=['POST'], endpoint='criar_cartao')(cartao_controller.create)
-app.route('/cartoes', methods=['GET'], endpoint='listar_cartoes')(cartao_controller.get_all)
-app.route('/cartoes/<int:id>', methods=['GET'], endpoint='buscar_cartao')(cartao_controller.get_by_id)
-app.route('/cartoes/<int:id>', methods=['PUT'], endpoint='atualizar_cartao')(cartao_controller.update)
-app.route('/cartoes/<int:id>', methods=['DELETE'], endpoint='deletar_cartao')(cartao_controller.delete)
+@app.route('/cartoes', methods=['POST'])
+def create_cartao():
+    return cartao_controller.create()
+
+@app.route('/cartoes', methods=['GET'])
+def get_all_cartoes():
+    return cartao_controller.get_all()
+
+@app.route('/cartoes/<int:id>', methods=['GET'])
+def get_cartao_by_id(id):
+    return cartao_controller.get_by_id(id)
+
+@app.route('/cartoes/<int:id>', methods=['PUT'])
+def update_cartao(id):
+    return cartao_controller.update(id)
+
+@app.route('/cartoes/<int:id>', methods=['DELETE'])
+def delete_cartao(id):
+    return cartao_controller.delete(id)
 
 # Rotas para Endereço
-app.route('/enderecos', methods=['POST'], endpoint='criar_endereco')(endereco_controller.create)
-app.route('/enderecos', methods=['GET'], endpoint='listar_enderecos')(endereco_controller.get_all)
-app.route('/enderecos/<int:id>', methods=['GET'], endpoint='buscar_endereco')(endereco_controller.get_by_id)
-app.route('/enderecos/<int:id>', methods=['PUT'], endpoint='atualizar_endereco')(endereco_controller.update)
-app.route('/enderecos/<int:id>', methods=['DELETE'], endpoint='deletar_endereco')(endereco_controller.delete)
+@app.route('/enderecos', methods=['POST'])
+def create_endereco():
+    return endereco_controller.create()
+
+@app.route('/enderecos', methods=['GET'])
+def get_all_enderecos():
+    return endereco_controller.get_all()
+
+@app.route('/enderecos/<int:id>', methods=['GET'])
+def get_endereco_by_id(id):
+    return endereco_controller.get_by_id(id)
+
+@app.route('/enderecos/<int:id>', methods=['PUT'])
+def update_endereco(id):
+    return endereco_controller.update(id)
+
+@app.route('/enderecos/<int:id>', methods=['DELETE'])
+def delete_endereco(id):
+    return endereco_controller.delete(id)
 
 # Rotas para Tipo de Endereço
-app.route('/tipos-endereco', methods=['POST'], endpoint='criar_tipo_endereco')(tipo_endereco_controller.create)
-app.route('/tipos-endereco', methods=['GET'], endpoint='listar_tipos_endereco')(tipo_endereco_controller.get_all)
-app.route('/tipos-endereco/<int:id>', methods=['GET'], endpoint='buscar_tipo_endereco')(tipo_endereco_controller.get_by_id)
-app.route('/tipos-endereco/<int:id>', methods=['PUT'], endpoint='atualizar_tipo_endereco')(tipo_endereco_controller.update)
-app.route('/tipos-endereco/<int:id>', methods=['DELETE'], endpoint='deletar_tipo_endereco')(tipo_endereco_controller.delete)
+@app.route('/tipos-endereco', methods=['POST'])
+def create_tipo_endereco():
+    return tipo_endereco_controller.create()
+
+@app.route('/tipos-endereco', methods=['GET'])
+def get_all_tipos_endereco():
+    return tipo_endereco_controller.get_all()
+
+@app.route('/tipos-endereco/<int:id>', methods=['GET'])
+def get_tipo_endereco_by_id(id):
+    return tipo_endereco_controller.get_by_id(id)
+
+@app.route('/tipos-endereco/<int:id>', methods=['PUT'])
+def update_tipo_endereco(id):
+    return tipo_endereco_controller.update(id)
+
+@app.route('/tipos-endereco/<int:id>', methods=['DELETE'])
+def delete_tipo_endereco(id):
+    return tipo_endereco_controller.delete(id)
 
 # Rotas para Produtos (Cosmos DB)
-app.route('/produtos', methods=['POST'], endpoint='criar_produto')(produto_controller.create)
-app.route('/produtos', methods=['GET'], endpoint='listar_produtos')(produto_controller.get_all)
-app.route('/produtos/<string:id>', methods=['GET'], endpoint='buscar_produto')(produto_controller.get_by_id)
-app.route('/produtos/<string:id>', methods=['PUT'], endpoint='atualizar_produto')(produto_controller.update)
-app.route('/produtos/<string:id>', methods=['DELETE'], endpoint='deletar_produto')(produto_controller.delete)
-app.route('/produtos/categoria/<string:categoria>', methods=['GET'], endpoint='buscar_produtos_por_categoria')(produto_controller.get_by_category)
+@app.route('/produtos', methods=['POST'])
+def create_produto():
+    return produto_controller.create()
+
+@app.route('/produtos', methods=['GET'])
+def get_all_produtos():
+    return produto_controller.get_all()
+
+@app.route('/produtos/<string:id>', methods=['GET'])
+def get_produto_by_id(id):
+    return produto_controller.get_by_id(id)
+
+@app.route('/produtos/<string:id>', methods=['PUT'])
+def update_produto(id):
+    return produto_controller.update(id)
+
+@app.route('/produtos/<string:id>', methods=['DELETE'])
+def delete_produto(id):
+    return produto_controller.delete(id)
+
+@app.route('/produtos/categoria/<string:categoria>', methods=['GET'])
+def get_produtos_by_categoria(categoria):
+    return produto_controller.get_by_category(categoria)
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 8000))
