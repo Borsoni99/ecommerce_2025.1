@@ -1,77 +1,86 @@
 from flask import jsonify, request
 from models.Endereco import Endereco
-from database.cosmos_connection import CosmosConnection
-import uuid
+from database.mysql_connection import MySQLConnection
 
 class EnderecoController:
     def __init__(self):
-        self.db = CosmosConnection()
-        self.container = self.db.get_container('enderecos')
+        self.db = MySQLConnection()
 
     def create(self):
         try:
             data = request.json
             endereco = Endereco.from_dict(data)
             
-            # Generate a unique ID for the document
-            document = endereco.to_dict()
-            document['id'] = str(uuid.uuid4())
+            cursor = self.db.connection.cursor()
+            sql = """INSERT INTO endereco 
+                     (logradouro, complemento, bairro, cidade, estado, 
+                      id_tp_endereco, id_usuario)
+                     VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+            values = (endereco.logradouro, endereco.complemento,
+                     endereco.bairro, endereco.cidade, endereco.estado,
+                     endereco.id_tp_endereco, endereco.id_usuario)
             
-            # Create the document in Cosmos DB
-            created_item = self.container.create_item(body=document)
+            cursor.execute(sql, values)
+            self.db.connection.commit()
+            endereco.id = cursor.lastrowid
             
-            return jsonify(created_item), 201
+            return jsonify(endereco.to_dict()), 201
         except Exception as e:
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'erro': str(e)}), 500
 
     def get_all(self):
         try:
-            # Query all items
-            query = "SELECT * FROM c"
-            items = list(self.container.query_items(
-                query=query,
-                enable_cross_partition_query=True
-            ))
-            return jsonify(items), 200
+            cursor = self.db.connection.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM endereco")
+            enderecos = cursor.fetchall()
+            return jsonify([Endereco.from_dict(e).to_dict() for e in enderecos]), 200
         except Exception as e:
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'erro': str(e)}), 500
 
     def get_by_id(self, id):
         try:
-            # Get item by id
-            item = self.container.read_item(item=str(id), partition_key=str(id))
-            return jsonify(item), 200
+            cursor = self.db.connection.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM endereco WHERE id = %s", (id,))
+            endereco = cursor.fetchone()
+            
+            if endereco:
+                return jsonify(Endereco.from_dict(endereco).to_dict()), 200
+            return jsonify({'mensagem': 'Endereço não encontrado'}), 404
         except Exception as e:
-            return jsonify({'message': 'Endereço não encontrado'}), 404
+            return jsonify({'erro': str(e)}), 500
 
     def update(self, id):
         try:
             data = request.json
             endereco = Endereco.from_dict(data)
             
-            # First, get the existing item
-            try:
-                existing_item = self.container.read_item(item=str(id), partition_key=str(id))
-            except:
-                return jsonify({'message': 'Endereço não encontrado'}), 404
+            cursor = self.db.connection.cursor()
+            sql = """UPDATE endereco 
+                     SET logradouro = %s, complemento = %s, bairro = %s,
+                         cidade = %s, estado = %s, id_tp_endereco = %s,
+                         id_usuario = %s
+                     WHERE id = %s"""
+            values = (endereco.logradouro, endereco.complemento,
+                     endereco.bairro, endereco.cidade, endereco.estado,
+                     endereco.id_tp_endereco, endereco.id_usuario, id)
             
-            # Update the item with new values
-            update_data = endereco.to_dict()
-            for key, value in update_data.items():
-                if key != 'id':  # Don't update the id
-                    existing_item[key] = value
+            cursor.execute(sql, values)
+            self.db.connection.commit()
             
-            # Replace the item in Cosmos DB
-            updated_item = self.container.replace_item(item=str(id), body=existing_item)
-            
-            return jsonify({'message': 'Endereço atualizado com sucesso'}), 200
+            if cursor.rowcount > 0:
+                return jsonify({'mensagem': 'Endereço atualizado com sucesso'}), 200
+            return jsonify({'mensagem': 'Endereço não encontrado'}), 404
         except Exception as e:
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'erro': str(e)}), 500
 
     def delete(self, id):
         try:
-            # Delete the item
-            self.container.delete_item(item=str(id), partition_key=str(id))
-            return jsonify({'message': 'Endereço deletado com sucesso'}), 200
+            cursor = self.db.connection.cursor()
+            cursor.execute("DELETE FROM endereco WHERE id = %s", (id,))
+            self.db.connection.commit()
+            
+            if cursor.rowcount > 0:
+                return jsonify({'mensagem': 'Endereço deletado com sucesso'}), 200
+            return jsonify({'mensagem': 'Endereço não encontrado'}), 404
         except Exception as e:
-            return jsonify({'message': 'Endereço não encontrado'}), 404
+            return jsonify({'erro': str(e)}), 500

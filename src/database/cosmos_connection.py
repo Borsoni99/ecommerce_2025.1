@@ -1,39 +1,83 @@
 from azure.cosmos import CosmosClient, PartitionKey
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
+import os
+from dotenv import load_dotenv
+import base64
 
 class CosmosConnection:
     def __init__(self):
-        # Cosmos DB Emulator default endpoint and key
-        url = "https://localhost:8081"
-        key = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
+        # Load environment variables
+        load_dotenv()
         
-        # Initialize Cosmos client with SSL verification disabled (for emulator)
-        import urllib3
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        self.client = CosmosClient(url, credential=key)
+        # Get credentials from environment variables
+        self.endpoint = os.getenv('COSMOS_DB_ENDPOINT')
+        key = os.getenv('COSMOS_DB_KEY', '')
         
-        # Create or get database
-        self.database = self.client.create_database_if_not_exists('ecommerce_db')
+        # Ensure proper base64 padding
+        padding = 4 - (len(key) % 4)
+        if padding != 4:
+            key = key + ('=' * padding)
+        self.key = key
         
-        # Create containers if they don't exist
-        self.containers = {}
+        if not self.endpoint or not self.key:
+            raise ValueError("Cosmos DB credentials not found in environment variables")
+        
+        # Initialize the Cosmos client
+        self.client = CosmosClient(self.endpoint, self.key)
+        
+        # Create database and container if they don't exist
+        self._ensure_database()
         self._ensure_containers()
     
-    def _ensure_containers(self):
-        # Define containers with their partition keys
-        container_configs = {
-            'usuarios': PartitionKey(path='/id'),
-            'tipos_endereco': PartitionKey(path='/id'),
-            'enderecos': PartitionKey(path='/id'),
-            'cartoes_credito': PartitionKey(path='/id')
-        }
-        
-        # Create containers if they don't exist
-        for container_name, partition_key in container_configs.items():
-            self.containers[container_name] = self.database.create_container_if_not_exists(
-                id=container_name,
-                partition_key=partition_key,
-                offer_throughput=400  # Minimum throughput for emulator
-            )
+    def _ensure_database(self):
+        """
+        Creates the database if it doesn't exist
+        """
+        try:
+            self.database = self.client.create_database_if_not_exists('ecommerce_db')
+        except Exception as e:
+            print(f"Error creating database: {str(e)}")
+            raise
     
-    def get_container(self, container_name):
-        return self.containers.get(container_name) 
+    def _ensure_containers(self):
+        """
+        Creates containers if they don't exist
+        """
+        try:
+            # Define container configurations
+            containers_config = {
+                'produtos': {
+                    'partition_key': PartitionKey(path='/productCategory'),
+                    'offer_throughput': 400
+                }
+            }
+            
+            # Create containers if they don't exist
+            for container_id, config in containers_config.items():
+                try:
+                    container = self.database.create_container_if_not_exists(
+                        id=container_id,
+                        partition_key=config['partition_key'],
+                        offer_throughput=config['offer_throughput']
+                    )
+                    print(f"Container {container_id} ensured")
+                except Exception as e:
+                    print(f"Error creating container {container_id}: {str(e)}")
+                    raise
+        except Exception as e:
+            print(f"Error in _ensure_containers: {str(e)}")
+            raise
+    
+    def get_container(self, container_id):
+        """
+        Gets a container by ID, creates it if it doesn't exist
+        """
+        try:
+            container = self.database.get_container_client(container_id)
+            # Test if container exists by reading its properties
+            container.read()
+            return container
+        except CosmosResourceNotFoundError:
+            print(f"Container {container_id} not found, creating it...")
+            self._ensure_containers()
+            return self.database.get_container_client(container_id) 
