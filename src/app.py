@@ -18,6 +18,14 @@ endereco_controller = EnderecoController()
 tipo_endereco_controller = TipoEnderecoController()
 produto_controller = ProdutoController()
 
+# Add CORS headers
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+    return response
+
 # Rotas para Usuário
 @app.route('/usuarios', methods=['POST'])
 def create_usuario():
@@ -81,4 +89,8 @@ app.route('/produtos/<string:id>', methods=['DELETE'], endpoint='deletar_produto
 app.route('/produtos/categoria/<string:categoria>', methods=['GET'], endpoint='buscar_produtos_por_categoria')(produto_controller.get_by_category)
 
 if __name__ == '__main__':
+    # In development, use debug mode
     app.run(debug=True)
+else:
+    # In production (Azure Web App), use production settings
+    app.config['DEBUG'] = False
