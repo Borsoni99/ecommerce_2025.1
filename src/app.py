@@ -5,26 +5,55 @@ from controllers.EnderecoController import EnderecoController
 from controllers.TipoEnderecoController import TipoEnderecoController
 from controllers.ProdutoController import ProdutoController
 from database.init_db import init_database
+import os
 
 app = Flask(__name__)
 
+# Configure app based on environment
+if os.getenv('WEBSITE_SITE_NAME'):  # Running in Azure
+    app.config.update(
+        DEBUG=False,
+        PROPAGATE_EXCEPTIONS=True
+    )
+else:  # Running locally
+    app.config.update(
+        DEBUG=True
+    )
+
 # Initialize database
-init_database()
+try:
+    init_database()
+except Exception as e:
+    app.logger.error(f"Error initializing database: {str(e)}")
 
 # Controllers
-usuario_controller = UsuarioController()
-cartao_controller = CartaoCreditoController()
-endereco_controller = EnderecoController()
-tipo_endereco_controller = TipoEnderecoController()
-produto_controller = ProdutoController()
+try:
+    usuario_controller = UsuarioController()
+    cartao_controller = CartaoCreditoController()
+    endereco_controller = EnderecoController()
+    tipo_endereco_controller = TipoEnderecoController()
+    produto_controller = ProdutoController()
+except Exception as e:
+    app.logger.error(f"Error initializing controllers: {str(e)}")
 
 # Add CORS headers
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
+
+# Add health check endpoint
+@app.route('/health', methods=['GET'])
+def health_check():
+    return {'status': 'healthy'}, 200
+
+# Handle OPTIONS requests
+@app.route('/', defaults={'path': ''}, methods=['OPTIONS'])
+@app.route('/<path:path>', methods=['OPTIONS'])
+def options_handler(path):
+    return {'status': 'ok'}, 200
 
 # Rotas para Usuário
 @app.route('/usuarios', methods=['POST'])
@@ -89,8 +118,5 @@ app.route('/produtos/<string:id>', methods=['DELETE'], endpoint='deletar_produto
 app.route('/produtos/categoria/<string:categoria>', methods=['GET'], endpoint='buscar_produtos_por_categoria')(produto_controller.get_by_category)
 
 if __name__ == '__main__':
-    # In development, use debug mode
-    app.run(debug=True)
-else:
-    # In production (Azure Web App), use production settings
-    app.config['DEBUG'] = False
+    port = int(os.getenv('PORT', 8000))
+    app.run(host='0.0.0.0', port=port)
