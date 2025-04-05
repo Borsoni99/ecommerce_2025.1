@@ -1,6 +1,6 @@
 from flask import jsonify, request
-from models.TipoEndereco import TipoEndereco
-from database.mysql_connection import MySQLConnection
+from src.models.TipoEndereco import TipoEndereco
+from src.database.mysql_connection import MySQLConnection
 
 class TipoEnderecoController:
     def __init__(self):

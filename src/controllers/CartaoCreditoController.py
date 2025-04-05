@@ -1,6 +1,6 @@
 from flask import jsonify, request
-from models.CartaoCredito import CartaoCredito
-from database.mysql_connection import MySQLConnection
+from src.models.CartaoCredito import CartaoCredito
+from src.database.mysql_connection import MySQLConnection
 
 class CartaoCreditoController:
     def __init__(self):

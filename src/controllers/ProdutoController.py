@@ -1,6 +1,6 @@
 from flask import jsonify, request
-from models.Produto import Produto
-from database.cosmos_connection import CosmosConnection
+from src.models.Produto import Produto
+from src.database.cosmos_connection import CosmosConnection
 import uuid
 
 class ProdutoController:

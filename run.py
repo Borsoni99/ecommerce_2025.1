@@ -1,10 +1,10 @@
 from flask import Flask
-from controllers.UsuarioController import UsuarioController
-from controllers.CartaoCreditoController import CartaoCreditoController
-from controllers.EnderecoController import EnderecoController
-from controllers.TipoEnderecoController import TipoEnderecoController
-from controllers.ProdutoController import ProdutoController
-from database.init_db import init_database
+from src.controllers.UsuarioController import UsuarioController
+from src.controllers.CartaoCreditoController import CartaoCreditoController
+from src.controllers.EnderecoController import EnderecoController
+from src.controllers.TipoEnderecoController import TipoEnderecoController
+from src.controllers.ProdutoController import ProdutoController
+from src.database.init_db import init_database
 import os
 
 app = Flask(__name__)
@@ -177,5 +177,4 @@ def get_produtos_by_categoria(categoria):
     return produto_controller.get_by_category(categoria)
 
 if __name__ == '__main__':
-    port = int(os.getenv('PORT', 8000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host="0.0.0.0", port=8000)

@@ -1,8 +1,10 @@
 from flask import jsonify, request
-from models.Usuario import Usuario
-from models.CartaoCredito import CartaoCredito
-from models.Endereco import Endereco
-from database.mysql_connection import MySQLConnection
+from src.models.Usuario import Usuario
+from src.models.CartaoCredito import CartaoCredito
+from src.models.Endereco import Endereco
+from src.database.mysql_connection import MySQLConnection
+from src.controllers.CartaoCreditoController import CartaoCreditoController
+from src.controllers.EnderecoController import EnderecoController
 
 class UsuarioController:
     def __init__(self):
