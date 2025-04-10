@@ -2,6 +2,8 @@
 
 Este repositório contém um projeto de e-commerce completo, com foco em análise de vendas utilizando Big Data e serviços de Cloud. A solução inclui um **API Gateway**, um **Backend** hospedado em **Azure App Service**, bancos de dados NoSQL (Azure Cosmos DB) e Relacional (Azure SQL), além de um pipeline de Big Data simplificado com integração ao **Power BI** para criação de relatórios.
 
+## Integrantes
+Daniel Lloyd, Thiago Borsoni, Bernardo Pinto
 ## Sumário
 - [Visão Geral](#visão-geral)
 - [Arquitetura](#arquitetura)
