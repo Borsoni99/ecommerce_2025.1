@@ -93,6 +93,10 @@ def delete_usuario(id):
 def create_cartao():
     return cartao_controller.create()
 
+@app.route('/cartoes/authorize/usuario/<int:id_usuario>', methods=['POST'])
+def authorize_transaction(id_usuario):
+    return cartao_controller.authorize_transaction(id_usuario)
+
 @app.route('/cartoes', methods=['GET'])
 def get_all_cartoes():
     return cartao_controller.get_all()
