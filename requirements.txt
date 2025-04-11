@@ -4,3 +4,4 @@ azure-cosmos==4.5.1
 mysql-connector-python==8.0.26
 python-dotenv==1.0.0
 gunicorn==20.1.0 
+pydantic==2.6.3
