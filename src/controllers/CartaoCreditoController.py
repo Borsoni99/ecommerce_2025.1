@@ -112,7 +112,7 @@ class CartaoCreditoController:
                     codigo_autorizacao=None,
                     dt_transacao=datetime.utcnow(),
                     message="Usuário não encontrado"
-                ).model_dump()), 404
+                ).dict()), 404
 
             # Buscar o cartão do usuário
             cursor.execute("""
@@ -127,7 +127,7 @@ class CartaoCreditoController:
                     codigo_autorizacao=None,
                     dt_transacao=datetime.utcnow(),
                     message="Cartão não encontrado ou dados inválidos"
-                ).model_dump()), 404
+                ).dict()), 404
 
             # Verificar se o cartão está expirado
             dt_expiracao = cartao['dtExpiracao']
@@ -137,7 +137,7 @@ class CartaoCreditoController:
                     codigo_autorizacao=None,
                     dt_transacao=datetime.utcnow(),
                     message="Cartão expirado"
-                ).model_dump()), 400
+                ).dict()), 400
 
             # Verificar se a data de expiração informada corresponde à do cartão
             mes, ano = map(int, transacao.dt_expiracao.split("/"))
@@ -148,7 +148,7 @@ class CartaoCreditoController:
                     codigo_autorizacao=None,
                     dt_transacao=datetime.utcnow(),
                     message="Data de expiração inválida"
-                ).model_dump()), 400
+                ).dict()), 400
 
             # Verificar saldo disponível
             if float(cartao['saldo']) < transacao.valor:
@@ -157,7 +157,7 @@ class CartaoCreditoController:
                     codigo_autorizacao=None,
                     dt_transacao=datetime.utcnow(),
                     message="Saldo insuficiente"
-                ).model_dump()), 400
+                ).dict()), 400
 
             # Deduzir o valor da transação do saldo
             novo_saldo = float(cartao['saldo']) - transacao.valor
@@ -175,7 +175,7 @@ class CartaoCreditoController:
                 codigo_autorizacao=uuid.uuid4(),
                 dt_transacao=datetime.utcnow(),
                 message="Transação autorizada com sucesso"
-            ).model_dump()), 200
+            ).dict()), 200
 
             return response
 
