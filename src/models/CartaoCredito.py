@@ -21,7 +21,17 @@ class CartaoCredito:
     def from_dict(cls, data: dict):
         dt = data.get('dt_expiracao')
         if dt and isinstance(dt, str):
-            dt = datetime.fromisoformat(dt)
+            try:
+                # Tenta primeiro o formato ISO
+                dt = datetime.fromisoformat(dt)
+            except ValueError:
+                try:
+                    # Se falhar, tenta o formato MM/YYYY
+                    mes, ano = map(int, dt.split('/'))
+                    dt = datetime(ano, mes, 1)
+                except ValueError:
+                    raise ValueError("Data deve estar no formato ISO (YYYY-MM-DDThh:mm:ss) ou MM/YYYY")
+
         return cls(
             id=data.get('id'),
             numero=data.get('numero'),
