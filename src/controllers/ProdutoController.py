@@ -71,7 +71,7 @@ class ProdutoController:
     def get_by_name(self, nome):
         try:
             # Consulta itens por nome
-            query = "SELECT * FROM c WHERE c.name = @name"
+            query = "SELECT * FROM c WHERE c.productName = @name"
             params = [{"name": "@name", "value": nome}]
             items = list(self.container.query_items(
                 query=query,
