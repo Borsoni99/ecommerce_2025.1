@@ -59,57 +59,57 @@ class UsuarioController:
         """
         try:
             data = request.json
-            
+
             # 1. Criar usuário
             usuario_data = data.get('usuario')
             if not usuario_data:
                 return jsonify({'erro': 'Dados do usuário são obrigatórios'}), 400
-            
+
             usuario = Usuario.from_dict(usuario_data)
             cursor = self.db.connection.cursor()
-            
+
             # Inserir usuário
             sql_usuario = """INSERT INTO usuario (nome, email, dtNascimento, CPF, Telefone)
                            VALUES (%s, %s, %s, %s, %s)"""
             values_usuario = (usuario.nome, usuario.email, usuario.dtNascimento,
                             usuario.CPF, usuario.Telefone)
-            
+
             cursor.execute(sql_usuario, values_usuario)
             id_usuario = cursor.lastrowid
-            
+
             # 2. Criar cartão de crédito
             cartao_data = data.get('cartao')
             if cartao_data:
                 cartao_data['id_usuario_cartao'] = id_usuario
                 cartao = CartaoCredito.from_dict(cartao_data)
-                
-                sql_cartao = """INSERT INTO cartao_credito 
+
+                sql_cartao = """INSERT INTO cartao_credito
                               (numero, dtExpiracao, cvv, saldo, id_usuario_cartao)
                               VALUES (%s, %s, %s, %s, %s)"""
                 values_cartao = (cartao.numero, cartao.dt_expiracao, cartao.cvv,
                                cartao.saldo, cartao.id_usuario_cartao)
-                
+
                 cursor.execute(sql_cartao, values_cartao)
-            
+
             # 3. Criar endereço
             endereco_data = data.get('endereco')
             if endereco_data:
                 endereco_data['id_usuario'] = id_usuario
                 endereco = Endereco.from_dict(endereco_data)
-                
-                sql_endereco = """INSERT INTO endereco 
-                                (logradouro, complemento, bairro, cidade, estado, 
+
+                sql_endereco = """INSERT INTO endereco
+                                (logradouro, complemento, bairro, cidade, estado,
                                  id_tp_endereco, id_usuario)
                                 VALUES (%s, %s, %s, %s, %s, %s, %s)"""
                 values_endereco = (endereco.logradouro, endereco.complemento,
                                  endereco.bairro, endereco.cidade, endereco.estado,
                                  endereco.id_tp_endereco, endereco.id_usuario)
-                
+
                 cursor.execute(sql_endereco, values_endereco)
-            
+
             # Commit da transação
             self.db.connection.commit()
-            
+
             # Buscar dados completos do usuário criado
             cursor.execute("""
                 SELECT u.*, cc.*, e.*
@@ -118,15 +118,15 @@ class UsuarioController:
                 LEFT JOIN endereco e ON u.id = e.id_usuario
                 WHERE u.id = %s
             """, (id_usuario,))
-            
+
             result = cursor.fetchone()
-            
+
             return jsonify({
                 'mensagem': 'Usuário criado com sucesso',
                 'id': id_usuario,
                 'dados': result
             }), 201
-            
+
         except Exception as e:
             # Em caso de erro, fazer rollback
             self.db.connection.rollback()
@@ -145,6 +145,18 @@ class UsuarioController:
         try:
             cursor = self.db.connection.cursor(dictionary=True)
             cursor.execute("SELECT * FROM usuario WHERE id = %s", (id,))
+            usuario = cursor.fetchone()
+
+            if usuario:
+                return jsonify(Usuario.from_dict(usuario).to_dict()), 200
+            return jsonify({'message': 'Usuário não encontrado'}), 404
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    def get_by_cpf(self, cpf):
+        try:
+            cursor = self.db.connection.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM usuario WHERE CPF = %s", (cpf,))
             usuario = cursor.fetchone()
 
             if usuario:
@@ -191,13 +203,13 @@ class UsuarioController:
         """
         try:
             cursor = self.db.connection.cursor(dictionary=True)
-            
+
             # Busca o usuário e seus relacionamentos
             sql = """
-                SELECT 
+                SELECT
                     u.*,
                     cc.id as cartao_id, cc.numero, cc.dtExpiracao, cc.cvv, cc.saldo,
-                    e.id as endereco_id, e.logradouro, e.complemento, e.bairro, 
+                    e.id as endereco_id, e.logradouro, e.complemento, e.bairro,
                     e.cidade, e.estado, e.id_tp_endereco,
                     te.id as tipo_endereco_id, te.tipo as tipo_endereco
                 FROM usuario u
@@ -208,10 +220,10 @@ class UsuarioController:
             """
             cursor.execute(sql, (id,))
             result = cursor.fetchall()
-            
+
             if not result:
                 return jsonify({'mensagem': 'Usuário não encontrado'}), 404
-            
+
             # Organiza os dados em uma estrutura hierárquica
             usuario_data = {
                 'id': result[0]['id'],
@@ -223,11 +235,11 @@ class UsuarioController:
                 'cartoes': [],
                 'enderecos': []
             }
-            
+
             # Processa cartões e endereços
             cartoes_processados = set()
             enderecos_processados = set()
-            
+
             for row in result:
                 # Adiciona cartão se existir e não foi processado
                 if row['cartao_id'] and row['cartao_id'] not in cartoes_processados:
@@ -239,7 +251,7 @@ class UsuarioController:
                         'cvv': row['cvv'],
                         'saldo': row['saldo']
                     })
-                
+
                 # Adiciona endereço se existir e não foi processado
                 if row['endereco_id'] and row['endereco_id'] not in enderecos_processados:
                     enderecos_processados.add(row['endereco_id'])
@@ -255,7 +267,7 @@ class UsuarioController:
                             'tipo': row['tipo_endereco']
                         }
                     })
-            
+
             return jsonify(usuario_data), 200
         except Exception as e:
             return jsonify({'erro': str(e)}), 500
@@ -293,24 +305,24 @@ class UsuarioController:
         try:
             data = request.json
             cursor = self.db.connection.cursor()
-            
+
             # 1. Atualiza usuário
             usuario_data = data.get('usuario')
             if not usuario_data:
                 return jsonify({'erro': 'Dados do usuário são obrigatórios'}), 400
-            
+
             usuario = Usuario.from_dict(usuario_data)
-            sql_usuario = """UPDATE usuario 
+            sql_usuario = """UPDATE usuario
                            SET nome = %s, email = %s, dtNascimento = %s,
-                               CPF = %s, Telefone = %s 
+                               CPF = %s, Telefone = %s
                            WHERE id = %s"""
             values_usuario = (usuario.nome, usuario.email, usuario.dtNascimento,
                             usuario.CPF, usuario.Telefone, id)
-            
+
             cursor.execute(sql_usuario, values_usuario)
             if cursor.rowcount == 0:
                 return jsonify({'erro': 'Usuário não encontrado'}), 404
-            
+
             # 2. Atualiza cartões
             cartoes_data = data.get('cartoes', [])
             if cartoes_data:
@@ -319,27 +331,27 @@ class UsuarioController:
                 if cartoes_ids:
                     # Formatação especial para IN com um único ID
                     if len(cartoes_ids) == 1:
-                        sql_delete_cartoes = """DELETE FROM cartao_credito 
-                                              WHERE id_usuario_cartao = %s 
+                        sql_delete_cartoes = """DELETE FROM cartao_credito
+                                              WHERE id_usuario_cartao = %s
                                               AND id != %s"""
                         cursor.execute(sql_delete_cartoes, (id, cartoes_ids[0]))
                     else:
-                        sql_delete_cartoes = """DELETE FROM cartao_credito 
-                                              WHERE id_usuario_cartao = %s 
+                        sql_delete_cartoes = """DELETE FROM cartao_credito
+                                              WHERE id_usuario_cartao = %s
                                               AND id NOT IN %s"""
                         cursor.execute(sql_delete_cartoes, (id, tuple(cartoes_ids)))
                 else:
-                    cursor.execute("""DELETE FROM cartao_credito 
+                    cursor.execute("""DELETE FROM cartao_credito
                                     WHERE id_usuario_cartao = %s""", (id,))
-                
+
                 # Atualiza ou cria novos cartões
                 for cartao_data in cartoes_data:
                     cartao_data['id_usuario_cartao'] = id
                     cartao = CartaoCredito.from_dict(cartao_data)
-                    
+
                     if 'id' in cartao_data:
                         # Atualiza cartão existente
-                        sql_cartao = """UPDATE cartao_credito 
+                        sql_cartao = """UPDATE cartao_credito
                                       SET numero = %s, dtExpiracao = %s, cvv = %s,
                                           saldo = %s
                                       WHERE id = %s AND id_usuario_cartao = %s"""
@@ -349,13 +361,13 @@ class UsuarioController:
                         cursor.execute(sql_cartao, values_cartao)
                     else:
                         # Cria novo cartão
-                        sql_cartao = """INSERT INTO cartao_credito 
+                        sql_cartao = """INSERT INTO cartao_credito
                                       (numero, dtExpiracao, cvv, saldo, id_usuario_cartao)
                                       VALUES (%s, %s, %s, %s, %s)"""
                         values_cartao = (cartao.numero, cartao.dt_expiracao,
                                        cartao.cvv, cartao.saldo, id)
                         cursor.execute(sql_cartao, values_cartao)
-            
+
             # 3. Atualiza endereços
             enderecos_data = data.get('enderecos', [])
             if enderecos_data:
@@ -364,27 +376,27 @@ class UsuarioController:
                 if enderecos_ids:
                     # Formatação especial para IN com um único ID
                     if len(enderecos_ids) == 1:
-                        sql_delete_enderecos = """DELETE FROM endereco 
-                                                WHERE id_usuario = %s 
+                        sql_delete_enderecos = """DELETE FROM endereco
+                                                WHERE id_usuario = %s
                                                 AND id != %s"""
                         cursor.execute(sql_delete_enderecos, (id, enderecos_ids[0]))
                     else:
-                        sql_delete_enderecos = """DELETE FROM endereco 
-                                                WHERE id_usuario = %s 
+                        sql_delete_enderecos = """DELETE FROM endereco
+                                                WHERE id_usuario = %s
                                                 AND id NOT IN %s"""
                         cursor.execute(sql_delete_enderecos, (id, tuple(enderecos_ids)))
                 else:
-                    cursor.execute("""DELETE FROM endereco 
+                    cursor.execute("""DELETE FROM endereco
                                     WHERE id_usuario = %s""", (id,))
-                
+
                 # Atualiza ou cria novos endereços
                 for endereco_data in enderecos_data:
                     endereco_data['id_usuario'] = id
                     endereco = Endereco.from_dict(endereco_data)
-                    
+
                     if 'id' in endereco_data:
                         # Atualiza endereço existente
-                        sql_endereco = """UPDATE endereco 
+                        sql_endereco = """UPDATE endereco
                                         SET logradouro = %s, complemento = %s,
                                             bairro = %s, cidade = %s, estado = %s,
                                             id_tp_endereco = %s
@@ -396,7 +408,7 @@ class UsuarioController:
                         cursor.execute(sql_endereco, values_endereco)
                     else:
                         # Cria novo endereço
-                        sql_endereco = """INSERT INTO endereco 
+                        sql_endereco = """INSERT INTO endereco
                                         (logradouro, complemento, bairro, cidade,
                                          estado, id_tp_endereco, id_usuario)
                                         VALUES (%s, %s, %s, %s, %s, %s, %s)"""
@@ -404,13 +416,13 @@ class UsuarioController:
                                          endereco.bairro, endereco.cidade,
                                          endereco.estado, endereco.id_tp_endereco, id)
                         cursor.execute(sql_endereco, values_endereco)
-            
+
             # Commit da transação
             self.db.connection.commit()
-            
+
             # Retorna os dados atualizados
             return self.get_complete_by_id(id)
-            
+
         except Exception as e:
             # Em caso de erro, faz rollback
             self.db.connection.rollback()

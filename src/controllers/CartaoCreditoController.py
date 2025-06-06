@@ -61,6 +61,20 @@ class CartaoCreditoController:
         except Exception as e:
             return jsonify({'erro': str(e)}), 500
 
+    def get_by_numero(self, numero):
+        try:
+            cursor = self.db.connection.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM cartao_credito WHERE numero = %s", (numero,))
+            cartao = cursor.fetchone()
+
+            if cartao:
+                # Rename dtExpiracao to dt_expiracao to match the model
+                cartao['dt_expiracao'] = cartao.pop('dtExpiracao')
+                return jsonify(CartaoCredito.from_dict(cartao).to_dict()), 200
+            return jsonify({'mensagem': 'Cartão não encontrado'}), 404
+        except Exception as e:
+            return jsonify({'erro': str(e)}), 500
+
     def update(self, id):
         try:
             data = request.json

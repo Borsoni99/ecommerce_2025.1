@@ -12,14 +12,14 @@ class ProdutoController:
         try:
             data = request.json
             produto = Produto.from_dict(data)
-            
+
             # Gera um ID único para o documento
             document = produto.to_dict()
             document['id'] = str(uuid.uuid4())
-            
+
             # Cria o documento no Cosmos DB
             created_item = self.container.create_item(body=document)
-            
+
             return jsonify(created_item), 201
         except Exception as e:
             return jsonify({'erro': str(e)}), 500
@@ -46,10 +46,10 @@ class ProdutoController:
                 parameters=params,
                 enable_cross_partition_query=True
             ))
-            
+
             if not items:
                 return jsonify({'mensagem': 'Produto não encontrado'}), 404
-                
+
             return jsonify(items[0]), 200
         except Exception as e:
             return jsonify({'erro': str(e)}), 500
@@ -68,11 +68,25 @@ class ProdutoController:
         except Exception as e:
             return jsonify({'erro': str(e)}), 500
 
+    def get_by_name(self, nome):
+        try:
+            # Consulta itens por nome
+            query = "SELECT * FROM c WHERE c.name = @name"
+            params = [{"name": "@name", "value": nome}]
+            items = list(self.container.query_items(
+                query=query,
+                parameters=params,
+                enable_cross_partition_query=True
+            ))
+            return jsonify(items), 200
+        except Exception as e:
+            return jsonify({'erro': str(e)}), 500
+
     def update(self, id):
         try:
             data = request.json
             produto = Produto.from_dict(data)
-            
+
             # Primeiro, verifica se o item existe
             query = "SELECT * FROM c WHERE c.id = @id"
             params = [{"name": "@id", "value": id}]
@@ -81,20 +95,20 @@ class ProdutoController:
                 parameters=params,
                 enable_cross_partition_query=True
             ))
-            
+
             if not items:
                 return jsonify({'mensagem': 'Produto não encontrado'}), 404
-            
+
             # Prepara o documento atualizado
             existing_item = items[0]
             update_data = produto.to_dict()
             for key, value in update_data.items():
                 if key != 'id':  # Não atualiza o id
                     existing_item[key] = value
-            
+
             # Atualiza o documento usando upsert
             updated_item = self.container.upsert_item(body=existing_item)
-            
+
             return jsonify({'mensagem': 'Produto atualizado com sucesso'}), 200
         except Exception as e:
             return jsonify({'erro': str(e)}), 500
@@ -109,10 +123,10 @@ class ProdutoController:
                 parameters=params,
                 enable_cross_partition_query=True
             ))
-            
+
             if not items:
                 return jsonify({'mensagem': 'Produto não encontrado'}), 404
-            
+
             # Deleta o item usando o ID e a categoria como partition key
             self.container.delete_item(
                 item=id,
@@ -120,4 +134,4 @@ class ProdutoController:
             )
             return jsonify({'mensagem': 'Produto deletado com sucesso'}), 200
         except Exception as e:
-            return jsonify({'erro': str(e)}), 500 
+            return jsonify({'erro': str(e)}), 500

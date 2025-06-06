@@ -72,6 +72,10 @@ def get_all_usuarios():
 def get_usuario_by_id(id):
     return usuario_controller.get_by_id(id)
 
+@app.route('/usuarios/cpf/<string:cpf>', methods=['GET'])
+def get_usuario_by_cpf(cpf):
+    return usuario_controller.get_by_cpf(cpf)
+
 @app.route('/usuarios/completo/<int:id>', methods=['GET'])
 def get_usuario_completo_by_id(id):
     return usuario_controller.get_complete_by_id(id)
@@ -104,6 +108,10 @@ def get_all_cartoes():
 @app.route('/cartoes/<int:id>', methods=['GET'])
 def get_cartao_by_id(id):
     return cartao_controller.get_by_id(id)
+
+@app.route('/cartoes/numero/<string:numero>', methods=['GET'])
+def get_cartao_by_numero(numero):
+    return cartao_controller.get_by_numero(numero)
 
 @app.route('/cartoes/<int:id>', methods=['PUT'])
 def update_cartao(id):
@@ -179,6 +187,10 @@ def delete_produto(id):
 @app.route('/produtos/categoria/<string:categoria>', methods=['GET'])
 def get_produtos_by_categoria(categoria):
     return produto_controller.get_by_category(categoria)
+
+@app.route('/produtos/nome/<string:nome>', methods=['GET'])
+def get_produtos_by_nome(nome):
+    return produto_controller.get_by_name(nome)
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8000)
