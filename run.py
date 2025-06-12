@@ -28,15 +28,49 @@ except Exception as e:
     app.logger.error(f"Error initializing database: {str(e)}")
 
 # Controllers
+# Initialize controllers individually to avoid failure cascade
+usuario_controller = None
+cartao_controller = None
+endereco_controller = None
+tipo_endereco_controller = None
+produto_controller = None
+pedido_controller = None
+
 try:
     usuario_controller = UsuarioController()
-    cartao_controller = CartaoCreditoController()
-    endereco_controller = EnderecoController()
-    tipo_endereco_controller = TipoEnderecoController()
-    produto_controller = ProdutoController()
-    pedido_controller = PedidoController()
+    app.logger.info("UsuarioController initialized successfully")
 except Exception as e:
-    app.logger.error(f"Error initializing controllers: {str(e)}")
+    app.logger.error(f"Error initializing UsuarioController: {str(e)}")
+
+try:
+    cartao_controller = CartaoCreditoController()
+    app.logger.info("CartaoCreditoController initialized successfully")
+except Exception as e:
+    app.logger.error(f"Error initializing CartaoCreditoController: {str(e)}")
+
+try:
+    endereco_controller = EnderecoController()
+    app.logger.info("EnderecoController initialized successfully")
+except Exception as e:
+    app.logger.error(f"Error initializing EnderecoController: {str(e)}")
+
+try:
+    tipo_endereco_controller = TipoEnderecoController()
+    app.logger.info("TipoEnderecoController initialized successfully")
+except Exception as e:
+    app.logger.error(f"Error initializing TipoEnderecoController: {str(e)}")
+
+try:
+    produto_controller = ProdutoController()
+    app.logger.info("ProdutoController initialized successfully")
+except Exception as e:
+    app.logger.error(f"Error initializing ProdutoController: {str(e)}")
+
+try:
+    pedido_controller = PedidoController()
+    app.logger.info("PedidoController initialized successfully")
+except Exception as e:
+    app.logger.error(f"Error initializing PedidoController: {str(e)}")
 
 # Add CORS headers
 @app.after_request
@@ -197,26 +231,38 @@ def get_produtos_by_nome(nome):
 # Rotas para Pedidos
 @app.route('/pedidos', methods=['POST'])
 def create_pedido():
+    if pedido_controller is None:
+        return jsonify({'erro': 'PedidoController não inicializado'}), 500
     return pedido_controller.create()
 
 @app.route('/pedidos', methods=['GET'])
 def get_all_pedidos():
+    if pedido_controller is None:
+        return jsonify({'erro': 'PedidoController não inicializado'}), 500
     return pedido_controller.get_all()
 
 @app.route('/pedidos/<int:id_pedido>', methods=['GET'])
 def get_pedido_by_id(id_pedido):
+    if pedido_controller is None:
+        return jsonify({'erro': 'PedidoController não inicializado'}), 500
     return pedido_controller.get_by_id(id_pedido)
 
 @app.route('/pedidos/nome/<string:nome_cliente>', methods=['GET'])
 def get_pedidos_by_nome_cliente(nome_cliente):
+    if pedido_controller is None:
+        return jsonify({'erro': 'PedidoController não inicializado'}), 500
     return pedido_controller.get_by_nome_cliente(nome_cliente)
 
 @app.route('/pedidos/<int:id_pedido>', methods=['PUT'])
 def update_pedido(id_pedido):
+    if pedido_controller is None:
+        return jsonify({'erro': 'PedidoController não inicializado'}), 500
     return pedido_controller.update(id_pedido)
 
 @app.route('/pedidos/<int:id_pedido>', methods=['DELETE'])
 def delete_pedido(id_pedido):
+    if pedido_controller is None:
+        return jsonify({'erro': 'PedidoController não inicializado'}), 500
     return pedido_controller.delete(id_pedido)
 
 if __name__ == '__main__':
