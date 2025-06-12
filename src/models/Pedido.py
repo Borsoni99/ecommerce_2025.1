@@ -9,8 +9,8 @@ class Pedido:
     Data: datetime
     id_cartao: int
     id_produto: str
-    id: Optional[int] = field(default=None)
     status: str
+    id: Optional[int] = field(default=None)
     criado_em: datetime = field(default_factory=datetime.now)
     atualizado_em: datetime = field(default_factory=datetime.now)
 
