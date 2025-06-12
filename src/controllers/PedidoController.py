@@ -29,6 +29,10 @@ class PedidoController:
     def get_all(self):
         """Buscar todos os pedidos"""
         try:
+            # Debug: Log when GET method is called
+            print(f"[DEBUG] PedidoController.get_all() called - Method: {request.method}")
+            print(f"[DEBUG] Request URL: {request.url}")
+
             cursor = self.db.connection.cursor(dictionary=True)
             sql = """
                 SELECT p.*, u.nome as nome_usuario
@@ -121,10 +125,16 @@ class PedidoController:
         except Exception as e:
             return jsonify({'erro': str(e)}), 500
 
-    def create(self):
+        def create(self):
         """Criar um pedido"""
         try:
+            # Debug: Log method and request details
+            print(f"[DEBUG] PedidoController.create() called - Method: {request.method}")
+            print(f"[DEBUG] Request URL: {request.url}")
+            print(f"[DEBUG] Request Headers: {dict(request.headers)}")
+
             dados = request.json
+            print(f"[DEBUG] Request JSON: {dados}")
 
             # Validar campos obrigatórios
             if not dados.get("id_produto") or not dados.get("valor_total") or not dados.get("id_cartao") or not dados.get("id_usuario"):
