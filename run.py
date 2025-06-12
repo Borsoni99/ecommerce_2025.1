@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 from src.controllers.UsuarioController import UsuarioController
 from src.controllers.CartaoCreditoController import CartaoCreditoController
 from src.controllers.EnderecoController import EnderecoController
