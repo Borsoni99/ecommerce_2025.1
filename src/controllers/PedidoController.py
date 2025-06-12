@@ -125,7 +125,7 @@ class PedidoController:
         except Exception as e:
             return jsonify({'erro': str(e)}), 500
 
-        def create(self):
+    def create(self):
         """Criar um pedido"""
         try:
             # Debug: Log method and request details
