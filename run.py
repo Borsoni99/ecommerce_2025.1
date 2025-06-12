@@ -4,6 +4,7 @@ from src.controllers.CartaoCreditoController import CartaoCreditoController
 from src.controllers.EnderecoController import EnderecoController
 from src.controllers.TipoEnderecoController import TipoEnderecoController
 from src.controllers.ProdutoController import ProdutoController
+from src.controllers.PedidoController import PedidoController
 from src.database.init_db import init_database
 import os
 
@@ -33,6 +34,7 @@ try:
     endereco_controller = EnderecoController()
     tipo_endereco_controller = TipoEnderecoController()
     produto_controller = ProdutoController()
+    pedido_controller = PedidoController()
 except Exception as e:
     app.logger.error(f"Error initializing controllers: {str(e)}")
 
@@ -191,6 +193,31 @@ def get_produtos_by_categoria(categoria):
 @app.route('/produtos/nome/<string:nome>', methods=['GET'])
 def get_produtos_by_nome(nome):
     return produto_controller.get_by_name(nome)
+
+# Rotas para Pedidos
+@app.route('/pedidos', methods=['POST'])
+def create_pedido():
+    return pedido_controller.create()
+
+@app.route('/pedidos', methods=['GET'])
+def get_all_pedidos():
+    return pedido_controller.get_all()
+
+@app.route('/pedidos/<int:id_pedido>', methods=['GET'])
+def get_pedido_by_id(id_pedido):
+    return pedido_controller.get_by_id(id_pedido)
+
+@app.route('/pedidos/nome/<string:nome_cliente>', methods=['GET'])
+def get_pedidos_by_nome_cliente(nome_cliente):
+    return pedido_controller.get_by_nome_cliente(nome_cliente)
+
+@app.route('/pedidos/<int:id_pedido>', methods=['PUT'])
+def update_pedido(id_pedido):
+    return pedido_controller.update(id_pedido)
+
+@app.route('/pedidos/<int:id_pedido>', methods=['DELETE'])
+def delete_pedido(id_pedido):
+    return pedido_controller.delete(id_pedido)
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8000)
