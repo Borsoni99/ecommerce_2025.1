@@ -91,6 +91,29 @@ def health_check():
 def options_handler(path):
     return {'status': 'ok'}, 200
 
+# Rotas para Pedidos
+# Rotas específicas primeiro para evitar conflitos
+@app.route('/pedidos/nome/<string:nome_cliente>', methods=['GET'])
+def get_pedidos_by_nome_cliente(nome_cliente):
+    return pedido_controller.get_by_nome_cliente(nome_cliente)
+
+@app.route('/pedidos/<int:id_pedido>', methods=['GET'])
+def get_pedido_by_id(id_pedido):
+    return pedido_controller.get_by_id(id_pedido)
+
+@app.route('/pedidos/<int:id_pedido>', methods=['PUT'])
+def update_pedido(id_pedido):
+    return pedido_controller.update(id_pedido)
+
+@app.route('/pedidos/<int:id_pedido>', methods=['DELETE'])
+def delete_pedido(id_pedido):
+    return pedido_controller.delete(id_pedido)
+
+# Rotas básicas por último - com verificação explícita de método
+@app.route('/pedidos', methods=['POST'])
+def create_pedido():
+    return pedido_controller.create()
+
 # Rotas para Usuário
 @app.route('/usuarios', methods=['POST'])
 def create_usuario():
@@ -228,44 +251,7 @@ def get_produtos_by_categoria(categoria):
 def get_produtos_by_nome(nome):
     return produto_controller.get_by_name(nome)
 
-# Rotas para Pedidos
-# Rotas específicas primeiro para evitar conflitos
-@app.route('/pedidos/nome/<string:nome_cliente>', methods=['GET'])
-def get_pedidos_by_nome_cliente(nome_cliente):
-    print(f"[ROUTE DEBUG] GET /pedidos/nome/{nome_cliente} called - Method: {request.method}")
-    if pedido_controller is None:
-        return jsonify({'erro': 'PedidoController não inicializado'}), 500
-    return pedido_controller.get_by_nome_cliente(nome_cliente)
 
-@app.route('/pedidos/<int:id_pedido>', methods=['GET'])
-def get_pedido_by_id(id_pedido):
-    print(f"[ROUTE DEBUG] GET /pedidos/{id_pedido} called - Method: {request.method}")
-    if pedido_controller is None:
-        return jsonify({'erro': 'PedidoController não inicializado'}), 500
-    return pedido_controller.get_by_id(id_pedido)
-
-@app.route('/pedidos/<int:id_pedido>', methods=['PUT'])
-def update_pedido(id_pedido):
-    print(f"[ROUTE DEBUG] PUT /pedidos/{id_pedido} called - Method: {request.method}")
-    if pedido_controller is None:
-        return jsonify({'erro': 'PedidoController não inicializado'}), 500
-    return pedido_controller.update(id_pedido)
-
-@app.route('/pedidos/<int:id_pedido>', methods=['DELETE'])
-def delete_pedido(id_pedido):
-    print(f"[ROUTE DEBUG] DELETE /pedidos/{id_pedido} called - Method: {request.method}")
-    if pedido_controller is None:
-        return jsonify({'erro': 'PedidoController não inicializado'}), 500
-    return pedido_controller.delete(id_pedido)
-
-# Rotas básicas por último - com verificação explícita de método
-@app.route('/pedidos', methods=['POST'])
-def create_pedido():
-    if pedido_controller is None:
-        return jsonify({'erro': 'PedidoController não inicializado'}), 500
-
-    print(f"[ROUTE DEBUG] Calling pedido_controller.create()")
-    return pedido_controller.create()
 
 
 if __name__ == '__main__':
