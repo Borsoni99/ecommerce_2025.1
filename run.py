@@ -109,13 +109,12 @@ def update_pedido(id_pedido):
 def delete_pedido(id_pedido):
     return pedido_controller.delete(id_pedido)
 
-@app.route('/pedidos', methods=['POST'])
-def create_pedido():
-    return pedido_controller.create()
-
-@app.route('/pedidos', methods=['GET'])
-def get_all_pedidos():
-    return pedido_controller.get_all()
+@app.route('/pedidos', methods=['POST', 'GET'])
+def handle_pedidos():
+    if request.method == 'POST':
+        return pedido_controller.create()
+    elif request.method == 'GET':
+        return pedido_controller.get_all()
 
 # Rotas para Usuário
 @app.route('/usuarios', methods=['POST'])
