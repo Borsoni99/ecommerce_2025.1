@@ -127,7 +127,54 @@ class PedidoController:
 
     def create(self):
         """Criar um pedido"""
-        return jsonify({"mensagem": "Pedido criado"}), 200
+        try:
+            dados = request.json
+
+            # Validar campos obrigatórios
+            if not dados.get("id_produto") or not dados.get("valor_total") or not dados.get("id_cartao") or not dados.get("id_usuario"):
+                return jsonify({"erro": "ID do produto, ID do cartão, ID do usuário e valor total são obrigatórios"}), 400
+
+            cursor = self.db.connection.cursor(dictionary=True)
+
+            # Verificar se usuário existe
+            cursor.execute("SELECT * FROM usuario WHERE id = %s", (dados["id_usuario"],))
+            usuario = cursor.fetchone()
+            if not usuario:
+                return jsonify({"erro": "Usuário não encontrado"}), 404
+
+            # Verificar se cartão existe e pertence ao usuário
+            cursor.execute("SELECT * FROM cartao_credito WHERE id = %s", (dados["id_cartao"],))
+            cartao = cursor.fetchone()
+            if not cartao:
+                return jsonify({"erro": "Cartão não encontrado"}), 404
+
+            if cartao['id_usuario_cartao'] != usuario['id']:
+                return jsonify({"erro": "Cartão não pertence ao usuário informado"}), 400
+
+            # Inserir novo pedido
+            sql = """INSERT INTO pedido (Data, id_produto, id_cartao, id_usuario, valor_total, status, criado_em, atualizado_em)
+                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
+
+            data_pedido = datetime.strptime(dados["data_pedido"], "%Y-%m-%d") if "data_pedido" in dados else datetime.now()
+            values = (
+                data_pedido,
+                dados["id_produto"],
+                dados["id_cartao"],
+                dados["id_usuario"],
+                dados["valor_total"],
+                dados.get("status", "Pendente"),
+                datetime.now(),
+                datetime.now()
+            )
+
+            cursor.execute(sql, values)
+            self.db.connection.commit()
+            id_pedido = cursor.lastrowid
+
+            return jsonify({"mensagem": "Pedido criado com sucesso", "id_pedido": id_pedido}), 201
+        except Exception as e:
+            self.db.connection.rollback()
+            return jsonify({'erro': str(e)}), 500
 
     def update(self, id_pedido):
         """Atualizar um pedido"""
