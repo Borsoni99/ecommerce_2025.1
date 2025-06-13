@@ -109,10 +109,9 @@ def update_pedido(id_pedido):
 def delete_pedido(id_pedido):
     return pedido_controller.delete(id_pedido)
 
-# Rotas básicas por último - com verificação explícita de método
-@app.route('/pedidos', methods=['POST'])
-def create_pedido():
-    return pedido_controller.create()
+@app.route('/pedidosteste/teste', methods=['POST'])
+def create_pedido_teste():
+    return pedido_controller.create_pedido()
 
 # Rotas para Usuário
 @app.route('/usuarios', methods=['POST'])
