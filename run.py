@@ -97,6 +97,10 @@ def options_handler(path):
 def get_pedidos_by_nome_cliente(nome_cliente):
     return pedido_controller.get_by_nome_cliente(nome_cliente)
 
+@app.route('/pedidos/usuario/<int:id_usuario>', methods=['GET'])
+def get_pedidos_by_id_usuario(id_usuario):
+    return pedido_controller.get_by_id_usuario(id_usuario)
+
 @app.route('/pedidos/<int:id_pedido>', methods=['GET'])
 def get_pedido_by_id(id_pedido):
     return pedido_controller.get_by_id(id_pedido)

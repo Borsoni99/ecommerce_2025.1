@@ -125,6 +125,38 @@ class PedidoController:
         except Exception as e:
             return jsonify({'erro': str(e)}), 500
 
+    def get_by_id_usuario(self, id_usuario):
+        """Buscar pedidos por ID do usuário"""
+        try:
+            cursor = self.db.connection.cursor(dictionary=True)
+            sql = """
+                SELECT p.*, u.nome as nome_usuario
+                FROM pedido p
+                JOIN usuario u ON p.id_usuario = u.id
+                WHERE p.id_usuario = %s
+            """
+            cursor.execute(sql, (id_usuario,))
+            pedidos = cursor.fetchall()
+
+            resultado = []
+            for p in pedidos:
+                nome_produto = self.buscar_nome_produto(p['id_produto'])
+                resultado.append({
+                    "id": p['id'],
+                    "cliente": p['nome_usuario'],
+                    "produto": nome_produto,
+                    "id_produto": p['id_produto'],
+                    "id_cartao": p['id_cartao'],
+                    "id_usuario": p['id_usuario'],
+                    "data": p['Data'].strftime("%d/%m/%Y"),
+                    "valor": p['valor_total'],
+                    "status": p['status']
+                })
+
+            return jsonify(resultado), 200
+        except Exception as e:
+            return jsonify({'erro': str(e)}), 500
+
     def create(self):
         """Criar um pedido"""
         try:
