@@ -109,7 +109,7 @@ def update_pedido(id_pedido):
 def delete_pedido(id_pedido):
     return pedido_controller.delete(id_pedido)
 
-@app.route('/pedidosteste/teste', methods=['POST'])
+@app.route('/pedidos', methods=['POST'])
 def create_pedido_teste():
     return pedido_controller.create_pedido()
 
