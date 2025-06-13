@@ -259,23 +259,14 @@ def delete_pedido(id_pedido):
     return pedido_controller.delete(id_pedido)
 
 # Rotas básicas por último - com verificação explícita de método
-@app.route('/pedidos', methods=['POST', 'GET'])
-def handle_pedidos():
-    print(f"[ROUTE DEBUG] /pedidos called - Method: {request.method}")
-    print(f"[ROUTE DEBUG] Content-Type: {request.content_type}")
-    print(f"[ROUTE DEBUG] Is JSON: {request.is_json}")
-
+@app.route('/pedidos', methods=['POST'])
+def create_pedido():
     if pedido_controller is None:
         return jsonify({'erro': 'PedidoController não inicializado'}), 500
 
-    if request.method == 'POST':
-        print(f"[ROUTE DEBUG] Calling pedido_controller.create()")
-        return pedido_controller.create()
-    elif request.method == 'GET':
-        print(f"[ROUTE DEBUG] Calling pedido_controller.get_all()")
-        return pedido_controller.get_all()
-    else:
-        return jsonify({'erro': f'Método {request.method} não permitido'}), 405
+    print(f"[ROUTE DEBUG] Calling pedido_controller.create()")
+    return pedido_controller.create()
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8000)
